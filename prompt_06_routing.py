@@ -111,11 +111,19 @@ class QueryRouter:
         chain = self.classification_prompt | self.llm
         result = chain.invoke({"query": query})
         
-        result_text = result.content.strip()
-        category, confidence_str = result_text.split(":")
+        # The model is asked to reply "category:confidence" (e.g. "physics:0.85").
+        # Parse defensively in case it adds extra text, colons, or an odd value.
+        result_text = result.content.strip().splitlines()[0]
+        category, _, confidence_str = result_text.partition(":")
         category = category.strip().lower()
-        confidence = float(confidence_str)
-        
+        if category not in ("physics", "math", "nature", "general"):
+            category = "general"
+        try:
+            confidence = float(confidence_str.strip().split()[0])
+        except (ValueError, IndexError):
+            confidence = 0.5
+        confidence = max(0.0, min(1.0, confidence))
+
         return {
             **state,
             "classification": ClassificationResult(category=category, confidence=confidence)
