@@ -13,7 +13,7 @@ How to run
 1. Create a `.env` file next to this script with your Groq API key:
        GROQ_API_KEY=your_key_here
 2. Install dependencies:  pip install -r requirements.txt
-3. Run:                   python prompt_07_self_discover.py
+3. Run:                   python self_discover.py
 
 It prints a direct model answer to a sample task, then streams the Self-Discover
 pipeline's state at each step. This makes several model calls, so on Groq's free

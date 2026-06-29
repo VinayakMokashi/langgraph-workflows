@@ -10,7 +10,7 @@ How to run
 1. Create a `.env` file next to this script with your Groq API key:
        GROQ_API_KEY=your_key_here
 2. Install dependencies:  pip install -r requirements.txt
-3. Run:                   python prompt_06_routing.py
+3. Run:                   python query_router.py
 
 It answers one sample query, then launches a Gradio app at
 http://127.0.0.1:7860 (press Ctrl+C to stop).
