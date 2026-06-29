@@ -6,16 +6,16 @@ A small, hands-on collection of **agentic workflows built with [LangGraph](https
 
 | Script | Pattern | What it does |
 | --- | --- | --- |
-| [`prompt_05_langgraph_intro.py`](prompt_05_langgraph_intro.py) | **Sequential pipeline** | A three-node graph that runs in order: classify text (News / Blog / Research / Other) → extract entities → summarize. Includes a Gradio UI. |
-| [`prompt_06_routing.py`](prompt_06_routing.py) | **Conditional routing** | Classifies a question (physics / math / nature / general), then a conditional edge routes it to the matching "expert" prompt so a specialist persona answers. Includes a Gradio UI. |
-| [`prompt_07_self_discover.py`](prompt_07_self_discover.py) | **Self-Discover agent** | A four-node pipeline that SELECTs reasoning modules → ADAPTs them to the task → STRUCTUREs them into a JSON plan → REASONs over the plan to answer. Prints each step's state. |
+| [`langgraph_intro.py`](langgraph_intro.py) | **Sequential pipeline** | A three-node graph that runs in order: classify text (News / Blog / Research / Other) → extract entities → summarize. Includes a Gradio UI. |
+| [`query_router.py`](query_router.py) | **Conditional routing** | Classifies a question (physics / math / nature / general), then a conditional edge routes it to the matching "expert" prompt so a specialist persona answers. Includes a Gradio UI. |
+| [`self_discover.py`](self_discover.py) | **Self-Discover agent** | A four-node pipeline that SELECTs reasoning modules → ADAPTs them to the task → STRUCTUREs them into a JSON plan → REASONs over the plan to answer. Prints each step's state. |
 
 ## Tech stack
 
 - Python 3.8+
 - [`langgraph`](https://langchain-ai.github.io/langgraph/) (stateful graphs / agent orchestration)
 - `langchain` + `langchain-core` + `langchain-groq` (LLM + prompt plumbing)
-- `gradio` (web UIs for `prompt_05` / `prompt_06`)
+- `gradio` (web UIs for `langgraph_intro` / `query_router`)
 - `python-dotenv` (loads your API key from a `.env` file)
 - Groq-hosted models: `llama-3.3-70b-versatile` and `llama-3.1-8b-instant`
 
@@ -63,17 +63,17 @@ A small, hands-on collection of **agentic workflows built with [LangGraph](https
 ## How to run
 
 ```bash
-python prompt_05_langgraph_intro.py
-python prompt_06_routing.py
-python prompt_07_self_discover.py
+python langgraph_intro.py
+python query_router.py
+python self_discover.py
 ```
 
-- **`prompt_05`** and **`prompt_06`** print some output and then launch a **Gradio app** at
+- **`langgraph_intro`** and **`query_router`** print some output and then launch a **Gradio app** at
   **http://127.0.0.1:7860** (press **Ctrl+C** to stop).
-- **`prompt_07`** prints to the terminal: a direct model answer, then the streamed
+- **`self_discover`** prints to the terminal: a direct model answer, then the streamed
   state of each step in the Self-Discover pipeline.
 
-> **Note:** `prompt_07` (and each query in `prompt_06`) makes several model calls.
+> **Note:** `self_discover` (and each query in `query_router`) makes several model calls.
 > On Groq's free tier (6,000 tokens/minute) they may pause to respect rate limits;
 > `max_retries` on the model lets them wait and resume rather than crash.
 
