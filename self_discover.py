@@ -15,12 +15,13 @@ How to run
 2. Install dependencies:  pip install -r requirements.txt
 3. Run:                   python self_discover.py
 
-It prints a direct model answer to a sample task, then streams the Self-Discover
-pipeline's state at each step. This makes several model calls, so on Groq's free
-tier it may pause to respect rate limits.
+It prints the task, a baseline direct answer, then each labelled step of the
+Self-Discover pipeline (select -> adapt -> structure -> final answer). This makes
+several model calls, so on Groq's free tier it may pause to respect rate limits.
 """
 
 import sys
+import warnings
 from pathlib import Path
 from typing import List, Optional
 
@@ -28,8 +29,12 @@ from typing_extensions import TypedDict
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_groq import ChatGroq
-from langgraph.graph import END, START, StateGraph
 from dotenv import load_dotenv
+
+# langchain re-enables its own deprecation warnings when imported; silence them
+# right before importing langgraph (whose import emits one) for clean demo output.
+warnings.filterwarnings("ignore")
+from langgraph.graph import END, START, StateGraph
 
 # Force UTF-8 stdout so model output with special characters does not crash on Windows.
 sys.stdout.reconfigure(encoding="utf-8")
@@ -115,17 +120,36 @@ class SelfDiscoveryAgent:
         
         return graph.compile()
     
-    def solve(self, task_description: str, reasoning_modules: List[str]) -> None:
+    def solve(self, task_description: str, reasoning_modules: List[str]) -> str:
+        """Run the Self-Discover pipeline, printing each stage, and return the answer."""
         reasoning_modules_str = "\n".join(reasoning_modules)
         initial_state = {
             "task_description": task_description,
-            "reasoning_modules": reasoning_modules_str
+            "reasoning_modules": reasoning_modules_str,
         }
         config = {"configurable": {"thread_id": "1"}}
 
-        for state in self.graph.stream(initial_state, config):
-            print(state)
-            print("\n")
+        # Human-friendly heading for each piece of state a node produces.
+        stage_titles = {
+            "selected_modules": "STEP 1 / SELECT  -  reasoning modules chosen for this task",
+            "adapted_modules": "STEP 2 / ADAPT  -  modules rephrased for this task",
+            "reasoning_structure": "STEP 3 / STRUCTURE  -  step-by-step plan (JSON)",
+            "answer": "STEP 4 / REASON  -  final answer",
+        }
+
+        final_answer = ""
+        for event in self.graph.stream(initial_state, config):
+            for update in event.values():
+                for key, value in update.items():
+                    text = value.strip() if isinstance(value, str) else str(value)
+                    print("=" * 72)
+                    print(stage_titles.get(key, key.upper()))
+                    print("=" * 72)
+                    print(text)
+                    print()
+                    if key == "answer":
+                        final_answer = text
+        return final_answer
 
 
 if __name__ == "__main__":
@@ -183,5 +207,24 @@ Each month after that, the number of coins continues to increase by 20%.
 How many coins will be in circulation at the end of month 15?"""
 
     agent = SelfDiscoveryAgent()
-    print(agent.model.invoke(task_example_4))
-    agent.solve(task_example_4, reasoning_modules)
+    task = task_example_4
+
+    print("#" * 72)
+    print("TASK")
+    print("#" * 72)
+    print(task.strip())
+    print()
+
+    # Baseline: what the model answers in a single call, without Self-Discover.
+    print("#" * 72)
+    print("BASELINE  -  direct answer (single model call, no Self-Discover)")
+    print("#" * 72)
+    print(agent.model.invoke(task).content.strip())
+    print()
+
+    # Self-Discover: select -> adapt -> structure -> reason.
+    print("#" * 72)
+    print("SELF-DISCOVER  -  step-by-step reasoning")
+    print("#" * 72)
+    print()
+    answer = agent.solve(task, reasoning_modules)
