@@ -62,8 +62,12 @@ class State(TypedDict):
 
 
 class QueryRouter:
-    def __init__(self, model_name="llama-3.3-70b-versatile"):
-        self.llm = ChatGroq(model_name=model_name, max_retries=10)
+    def __init__(self, model_name="openai/gpt-oss-120b"):
+        # gpt-oss reasons before it answers and those tokens count towards max_tokens.
+        # Groq's default cap can cut long answers off. The expert answers here are
+        # long but the prompts are short, so 6000 fits while keeping prompt +
+        # max_tokens within the free tier's 8,000 tokens-per-minute budget.
+        self.llm = ChatGroq(model_name=model_name, max_tokens=6000, max_retries=10)
     
         self.classification_prompt = ChatPromptTemplate.from_messages([
             ("system", """You are a query classifier. Given a query, determine which of the following categories it belongs to: 
@@ -224,7 +228,7 @@ class QueryRouter:
 
 
 if __name__ == "__main__":
-    router = QueryRouter(model_name="llama-3.3-70b-versatile")
+    router = QueryRouter(model_name="openai/gpt-oss-120b")
     response = router.process_query("What is the theory of relativity")
 
 

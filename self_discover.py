@@ -21,7 +21,6 @@ several model calls, so on Groq's free tier it may pause to respect rate limits.
 """
 
 import sys
-import warnings
 from pathlib import Path
 from typing import List, Optional
 
@@ -30,10 +29,6 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
-
-# langchain re-enables its own deprecation warnings when imported; silence them
-# right before importing langgraph (whose import emits one) for clean demo output.
-warnings.filterwarnings("ignore")
 from langgraph.graph import END, START, StateGraph
 
 # Force UTF-8 stdout so model output with special characters does not crash on Windows.
@@ -66,8 +61,11 @@ class SelfDiscoverState(TypedDict):
 
 
 class SelfDiscoveryAgent:
-    def __init__(self, model_name: str = "llama-3.1-8b-instant"):
-        self.model = ChatGroq(model_name=model_name, max_retries=10)
+    def __init__(self, model_name: str = "openai/gpt-oss-20b"):
+        # gpt-oss reasons before it answers and those tokens count towards max_tokens.
+        # Groq's default cap can cut long answers off; 4096 leaves room for them while
+        # keeping prompt + max_tokens within the free tier's 8,000 tokens-per-minute budget.
+        self.model = ChatGroq(model_name=model_name, max_tokens=4096, max_retries=10)
         
         self.select_chain = self.setup_select_chain()
         self.adapt_chain = self.setup_adapt_chain()

@@ -1,8 +1,6 @@
-# Pinned to the langchain 0.3 / langgraph 0.2 line that these scripts target.
-# (langchain 1.x / langgraph 1.x moved several import paths used here.)
+# Targets the LangChain 1.x / LangGraph 1.x line.
 python-dotenv
-langchain>=0.3,<1
-langchain-core>=0.3,<0.4
-langchain-groq>=0.2,<0.3
-langgraph>=0.2,<0.3
-gradio
+langchain-core>=1.0,<2
+langchain-groq>=1.0,<2
+langgraph>=1.0,<2
+gradio>=6,<7
